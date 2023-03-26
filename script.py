@@ -121,13 +121,13 @@ class MCDeck(QtWidgets.QMainWindow):
         action.setStatusTip('Export Tabletop Simulator deck front/back images')
         export_tts_action = action
 
-        action = QtGui.QAction('&Card set ...', self)
+        action = QtGui.QAction('&OCTGN Set (.zip) ...', self)
         action.setEnabled(False)
         action.triggered.connect(deck.exportOctgnCardSet)
         action.setStatusTip('Export card set for OCTGN')
         self.__export_octgn_card_set_action = action
 
-        action = QtGui.QAction('&Deck ...', self)
+        action = QtGui.QAction('&OCTGN Deck (.o8d)...', self)
         action.setEnabled(False)
         action.triggered.connect(deck.exportOctgnDeck)
         action.setStatusTip('Export OCTGN .o8d deck')
@@ -460,9 +460,8 @@ class MCDeck(QtWidgets.QMainWindow):
         export_menu = file_menu.addMenu('&Export')
         export_menu.addAction(self._export_pdf_action)
         export_menu.addAction(export_tts_action)
-        export_octgn_menu = export_menu.addMenu('&Octgn')
-        export_octgn_menu.addAction(self.__export_octgn_card_set_action)
-        export_octgn_menu.addAction(self.__export_octgn_deck_action)
+        export_menu.addAction(self.__export_octgn_card_set_action)
+        export_menu.addAction(self.__export_octgn_deck_action)
         file_menu.addSeparator()
         file_menu.addAction(exit_action)
 
@@ -704,7 +703,7 @@ class MCDeck(QtWidgets.QMainWindow):
                         ('https://cdn.discordapp.com/attachments/64131799'
                          '9168454685/869297402161537024/trasera_lila.png')]
             else:
-                raise RuntimeError('Shold never happen')
+                raise RuntimeError('Should never happen')
 
             try:
                 # Resolve local file names for images
@@ -1535,7 +1534,6 @@ class MCDeck(QtWidgets.QMainWindow):
             return True
         else:
             return True
-
 
 class Deck(QtWidgets.QScrollArea):
     """View for a deck of cards."""

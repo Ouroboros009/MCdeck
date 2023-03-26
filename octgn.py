@@ -407,6 +407,110 @@ class OctgnCardSetData(object):
                 img_path = os.path.join(*_path_l)
                 zipfile.writestr(img_path, img_data)
 
+        # Generate .o8d deck and add to zip file
+        err = lambda s1, s2: ErrorDialog(parent, s1, s2).exec()
+        """
+        Validate deck can be exported
+
+        """
+        if not deck._octgn:
+            raise RuntimeError('Should never happen')
+        cards = deck._card_list_copy
+        if not cards:
+            _msg = 'The deck has no cards to export'
+            err('Nothing to export', _msg)
+            return
+        for i, card in enumerate(cards):
+            if not card._octgn:
+                raise RuntimeError('Should never happen')
+            if not card._octgn.image_id:
+                err(f'Card without OCTGN card id', f'Card number {i + 1} '
+                    f'(name "{card._octgn.name}") has no OCTGN card ID')
+                return
+            if card._octgn._o8d_type is None:
+                err(f'Card without card type', f'Card number {i + 1} '
+                    f'(name "{card._octgn.name}") does not have card type '
+                    'set (need to edit OCTGN data on the Export tab)')
+                return
+
+        # Choose which type of deck is exported
+        for i, card in enumerate(cards):
+            if card._octgn.properties.get('Type') == 'hero':
+                o8d_deck_type = 'Heroes'
+            if card._octgn.properties.get('Type') == 'villain':
+                o8d_deck_type = 'Villains'
+
+        if o8d_deck_type == None:
+            o8d_deck_type = 'Modulars'
+
+        # Aggregate cards for .o8d encoding
+        card_types = OctgnCardData._o8d_player_types.copy()
+        card_types.extend(OctgnCardData._o8d_global_types.copy())
+        card_d = dict()
+        for i in range(len(card_types)):
+            card_d[i] = dict()
+        for card in cards:
+            d = card_d[card._octgn._o8d_type]
+            card_id = card._octgn.image_id
+            if card_id not in d:
+                d[card_id] = (card._octgn.name, 0)
+            name, count = d[card_id]
+            d[card_id] = (name, count + 1)
+
+        # Encode .o8d deck as XML
+        root = ElementTree.Element('deck')
+        root.set('game', mc_game_id)
+        # Encode player card types
+        for i, c_type in enumerate(OctgnCardData._o8d_player_types):
+            section = ElementTree.SubElement(root, 'section')
+            section.set('name', c_type)
+            section.set('shared', 'False')
+            section_index = i
+            for card_id, value in card_d[section_index].items():
+                name, count = value
+                card_e = ElementTree.SubElement(section, 'card')
+                card_e.set('qty', str(count))
+                card_e.set('id', card_id)
+                if name:
+                    card_e.text = name
+        # Encode global card types
+        for i, c_type in enumerate(OctgnCardData._o8d_global_types):
+            section = ElementTree.SubElement(root, 'section')
+            section.set('name', c_type)
+            section.set('shared', 'True')
+            section_index = i + len(OctgnCardData._o8d_player_types)
+            for card_id, value in card_d[section_index].items():
+                name, count = value
+                card_e = ElementTree.SubElement(section, 'card')
+                card_e.set('qty', str(count))
+                card_e.set('id', card_id)
+                if name:
+                    card_e.text = name
+
+        # Convert XML to string representation
+        ElementTree.indent(root, '  ')
+        s = ElementTree.tostring(root, encoding='utf-8',
+                                 xml_declaration=True).decode('utf-8')
+        # Workaround for missing option to set standalone in XML declaration
+        s_list = s.splitlines()
+        header = s_list[0]
+        pos = header.find('?>')
+        header = header[:pos] + ' standalone=\'yes\'' + header[pos:]
+        s_list[0] = header
+        xml_encoding = '\n'.join(s_list)
+        if o8d_deck_type == 'Villains':
+            l1 = ('GameDatabase', mc_game_id, 'FanMade', o8d_deck_type, 'Standard', deck._octgn.name.strip("(FM) ")+'.o8d')
+            l2 = ('GameDatabase', mc_game_id, 'FanMade', o8d_deck_type, 'Expert', deck._octgn.name.strip("(FM) ")+'.o8d')
+            set_xml_path = os.path.join(*l1)
+            zipfile.writestr(set_xml_path, xml_encoding)
+            set_xml_path = os.path.join(*l2)
+            zipfile.writestr(set_xml_path, xml_encoding)
+        else:
+            l = ('GameDatabase', mc_game_id, 'FanMade', o8d_deck_type, deck._octgn.name.strip("(FM) ")+'.o8d')
+            set_xml_path = os.path.join(*l)            
+            zipfile.writestr(set_xml_path, xml_encoding)
+
+
     @classmethod
     def export_o8d_deck(cls, parent, deck):
         """Export a deck as an .o8d file.
