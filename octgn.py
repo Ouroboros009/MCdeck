@@ -36,7 +36,7 @@ from PySide6 import QtWidgets, QtCore, QtGui
 from lcgtools import LcgException
 from lcgtools.graphics import LcgImage
 
-from mcdeck.util import ErrorDialog
+from mcdeck.util import ErrorDialog, to_posix_path
 
 
 # The OCTGN game ID for Marvel Champions: The Card Game, ref.
@@ -509,6 +509,67 @@ class OctgnCardSetData(object):
             l = ('GameDatabase', mc_game_id, 'FanMade', o8d_deck_type, deck._octgn.name.strip("(FM) ")+'.o8d')
             set_xml_path = os.path.join(*l)            
             zipfile.writestr(set_xml_path, xml_encoding)
+
+        # Generate OCTGN save data (if any)
+        if deck._octgn:
+            set_info = deck._octgn
+            card_data_l = []
+            for card in deck._card_list_copy:
+                c_data = card._octgn
+                if c_data.alt_data and not card.specified_back_img:
+                    _msg = 'Card(s) with no back img have alt card OCTGN data'
+                    err('Metadata problem', _msg)
+                    return
+                card_data_l.append(c_data)
+            octgn_file_s = set_info.to_str(card_data_l)
+        else:
+            octgn_file_s = None
+
+        # If the deck has OCTGN metadata, save it
+        if octgn_file_s:
+            zipfile.writestr('octgn.txt', octgn_file_s)
+
+        # Generate MCdeck.mcd save data (if any)
+        mcd = ('# MCdeck definition of a custom cards MC:TCG deck.\n'
+               '# See https://pypi.org/project/mcdeck/ for info.\n')
+        node = None
+
+        for card in deck._card_list_copy:
+            # Generate mcdeck.mcd file 
+            _node = None
+            _node = 'player'
+
+            if _node and not card.specified_back_img:
+                # Store player, encounter or villain card
+                if _node != node:
+                    mcd += f'\n{_node}:\n'
+                    node = _node
+                _path_l = ['ImageDatabase', mc_game_id, 'Sets', deck._octgn.set_id, 'Cards']
+                _img_id = card._octgn.image_id
+                uuid.UUID('{' + _img_id + '}')  # Validates UUID Format
+                _name = f'{_img_id}.{img_format.lower()}'
+                img_path = os.path.join(*_path_l, _name)
+                mcd += f'  {to_posix_path(img_path)}\n'
+            else:
+                # Single card
+                node = None
+                if card.back_img and card.back_bleed > 0:
+                    mcd += f'\nsingle [back_bleed={card.back_bleed}]:\n'
+                else:
+                    mcd += '\nsingle:\n'
+                _path_l = ['ImageDatabase', mc_game_id, 'Sets', deck._octgn.set_id, 'Cards']
+                _img_id = card._octgn.image_id
+                uuid.UUID('{' + _img_id + '}')  # Validates UUID Format
+                _name = f'{_img_id}.{img_format.lower()}'
+                img_path = os.path.join(*_path_l, _name)
+                mcd += f'  {to_posix_path(img_path)}\n'
+                if card.back_img:
+                    _name = f'{_img_id}.b.{img_format.lower()}'
+                    img_path = os.path.join(*_path_l, _name)
+                    mcd += f'  {to_posix_path(img_path)}\n'
+
+        # Write the card definition file to the top level of the zipfile
+        zipfile.writestr('mcdeck.mcd', mcd)
 
 
     @classmethod
@@ -4311,7 +4372,10 @@ def install_card_sets(data_path, paths):
         # Install card set .zip file
         zf = zipfile.ZipFile(path)
         dest_dir = data_path
-        zf.extractall(path=dest_dir)
+        for file in zf.namelist():
+            if file.endswith('.mcd') or os.path.basename(file) == 'octgn.txt':
+                continue
+            zf.extract(file, dest_dir)
         installed.append(path)
 
     return (installed, skipped)
@@ -4386,8 +4450,7 @@ def _validate_card_set_file(data_path, path):
             else:
                 _tree[1].append(info)
 
-        if (len(p_tree[0]) != 2 or 'GameDatabase' not in p_tree[0] or
-            'ImageDatabase' not in p_tree[0] or p_tree[1]):
+        if ('GameDatabase' not in p_tree[0] or 'ImageDatabase' not in p_tree[0]):
             _msg = 'Invalid top directory structure'
             return (False, _msg)
 
