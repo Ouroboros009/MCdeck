@@ -499,14 +499,14 @@ class OctgnCardSetData(object):
         s_list[0] = header
         xml_encoding = '\n'.join(s_list)
         if o8d_deck_type == 'Villains':
-            l1 = ('GameDatabase', mc_game_id, 'FanMade', o8d_deck_type, 'Standard', deck._octgn.name.strip("(FM) ")+'.o8d')
-            l2 = ('GameDatabase', mc_game_id, 'FanMade', o8d_deck_type, 'Expert', deck._octgn.name.strip("(FM) ")+'.o8d')
+            l1 = ('GameDatabase', mc_game_id, 'FanMade', o8d_deck_type, 'Standard', deck._octgn.name+'.o8d')
+            l2 = ('GameDatabase', mc_game_id, 'FanMade', o8d_deck_type, 'Expert', deck._octgn.name+'.o8d')
             set_xml_path = os.path.join(*l1)
             zipfile.writestr(set_xml_path, xml_encoding)
             set_xml_path = os.path.join(*l2)
             zipfile.writestr(set_xml_path, xml_encoding)
         else:
-            l = ('GameDatabase', mc_game_id, 'FanMade', o8d_deck_type, deck._octgn.name.strip("(FM) ")+'.o8d')
+            l = ('GameDatabase', mc_game_id, 'FanMade', o8d_deck_type, deck._octgn.name+'.o8d')
             set_xml_path = os.path.join(*l)            
             zipfile.writestr(set_xml_path, xml_encoding)
 
