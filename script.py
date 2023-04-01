@@ -2726,6 +2726,18 @@ class Deck(QtWidgets.QScrollArea):
         self.clear()
         QtCore.QCoreApplication.processEvents()  # Force Qt display update
 
+        # Handle automatic aspect transformation of cards
+        _s = MCDeck.settings
+        aspect_rotation = _s.aspect_rotation
+        if aspect_rotation != 'none':
+            if aspect_rotation == 'clockwise':
+                clockwise = True
+            if aspect_rotation == 'anticlockwise':
+                clockwise = False
+            else:
+                raise RuntimeError('Should never happen')
+            portrait = (_s.card_height_mm >= _s.card_width_mm)
+
         # (Try to) load deck
         _url_download_approved = False
         self.__operation_cancelled = False
@@ -2836,6 +2848,14 @@ class Deck(QtWidgets.QScrollArea):
                                 ctype_d = {'player':Card.type_player,
                                            'encounter':Card.type_encounter,
                                            'villain':Card.type_villain}
+                                img = LcgImage(img)
+                                c_portrait = (img.heightMm() >= img.widthMM())
+                                if portrait ^ c_portrait:
+                                    # Wrong aspect, rotate
+                                    if clockwise:
+                                        img = img.rotateClockwise()
+                                    else:
+                                        img = img.rotateAntiClockwise()
                                 self.addCard(img, ctype=ctype_d[mode])
                         else:
                             # Read card(s) from local file system
@@ -2866,6 +2886,14 @@ class Deck(QtWidgets.QScrollArea):
                                 ctype_d = {'player':Card.type_player,
                                            'encounter':Card.type_encounter,
                                            'villain':Card.type_villain}
+                                img = LcgImage(img)
+                                c_portrait = (img.heightMm() >= img.widthMM())
+                                if portrait ^ c_portrait:
+                                    # Wrong aspect, rotate
+                                    if clockwise:
+                                        img = img.rotateClockwise()
+                                    else:
+                                        img = img.rotateAntiClockwise()
                                 self.addCard(img, ctype=ctype_d[mode])
                     else:
                         # Load from specified source
@@ -2885,6 +2913,14 @@ class Deck(QtWidgets.QScrollArea):
                         ctype_d = {'player':Card.type_player,
                                    'encounter':Card.type_encounter,
                                    'villain':Card.type_villain}
+                        img = LcgImage(img)
+                        c_portrait = (img.heightMm() >= img.widthMM())
+                        if portrait ^ c_portrait:
+                            # Wrong aspect, rotate
+                            if clockwise:
+                                img = img.rotateClockwise()
+                            else:
+                                img = img.rotateAntiClockwise()
                         self.addCard(img, ctype=ctype_d[mode])
 
                 elif line and line[:1].strip():
@@ -2980,6 +3016,14 @@ class Deck(QtWidgets.QScrollArea):
                                     err('Image load error',
                                         f'Could not open image {p} in zip file')
                                     raise LcgException('Image load error')
+                                img = LcgImage(img)
+                                c_portrait = (img.heightMm() >= img.widthMM())
+                                if portrait ^ c_portrait:
+                                    # Wrong aspect, rotate
+                                    if clockwise:
+                                        img = img.rotateClockwise()
+                                    else:
+                                        img = img.rotateAntiClockwise()
                                 single_images.append(img)
                             else:
                                 # Read card(s) from file system
@@ -2997,6 +3041,14 @@ class Deck(QtWidgets.QScrollArea):
                                     err('Image load error',
                                         f'Could not open image {path}')
                                     raise LcgException('Image load error')
+                                img = LcgImage(img)
+                                c_portrait = (img.heightMm() >= img.widthMM())
+                                if portrait ^ c_portrait:
+                                    # Wrong aspect, rotate
+                                    if clockwise:
+                                        img = img.rotateClockwise()
+                                    else:
+                                        img = img.rotateAntiClockwise()
                                 single_images.append(img)
                         else:
                             if mode_sub == 'url':
@@ -3012,6 +3064,14 @@ class Deck(QtWidgets.QScrollArea):
                                 err('Image load error',
                                     f'Could not open image from {img_url}')
                                 raise LcgException('Image load error')
+                            img = LcgImage(img)
+                            c_portrait = (img.heightMm() >= img.widthMM())
+                            if portrait ^ c_portrait:
+                                # Wrong aspect, rotate
+                                if clockwise:
+                                    img = img.rotateClockwise()
+                                else:
+                                    img = img.rotateAntiClockwise()
                             single_images.append(img)
 
                     # Add single card

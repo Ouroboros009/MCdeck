@@ -386,6 +386,9 @@ class OctgnCardSetData(object):
         mode = QtCore.Qt.SmoothTransformation
         for card in deck._card_list_copy:
             img = LcgImage(card.front_img.scaled(img_size, mode=mode))
+            # Handle aspect transformation
+            if card._octgn.properties.get('Type') in ['main_scheme', 'side_scheme']:
+                img = img.rotateClockwise()
             img_data = img.saveToBytes(format=img_format)
             _path_l = ['ImageDatabase', mc_game_id, 'Sets', deck._octgn.set_id,
                        'Cards']
@@ -396,8 +399,10 @@ class OctgnCardSetData(object):
             img_path = os.path.join(*_path_l)
             zipfile.writestr(img_path, img_data)
             if card._octgn.alt_data:
-                img = LcgImage(card.specified_back_img.scaled(img_size,
-                                                              mode=mode))
+                img = LcgImage(card.specified_back_img.scaled(img_size, mode=mode))
+                # Handle aspect transformation
+                if card._octgn.alt_data.properties.get('Type') in ['main_scheme', 'side_scheme']:
+                    img = img.rotateClockwise()
                 img_data = img.saveToBytes(format=img_format)
                 _path_l = ['ImageDatabase', mc_game_id, 'Sets',
                            deck._octgn.set_id, 'Cards']
