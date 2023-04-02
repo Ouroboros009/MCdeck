@@ -541,10 +541,13 @@ class OctgnCardSetData(object):
 
         for card in deck._card_list_copy:
             # Generate mcdeck.mcd file 
-            _node = None
-            _node = 'player'
-
-            if _node and not card.specified_back_img:
+            if not card.specified_back_img:
+                if card.ctype == card.type_player:
+                    _node = 'player'
+                elif card.ctype == card.type_encounter:
+                    _node = 'encounter'
+                elif card.ctype == card.type_villain:
+                    _node = 'villain'
                 # Store player, encounter or villain card
                 if _node != node:
                     mcd += f'\n{_node}:\n'
