@@ -319,7 +319,8 @@ class Card(object):
                     'escalation_threat': 'EscalationThreat',
                     'scheme_acceleration': 'Scheme_Acceleration',
                     'scheme_crisis': 'Scheme_Crisis',
-                    'scheme_hazard': 'Scheme_Hazard', 'boost': 'Boost'
+                    'scheme_hazard': 'Scheme_Hazard', 'scheme_boost': 'Scheme_Boost', 
+                    'boost': 'Boost'
                     }
     _octgn_bool = {'is_unique': 'Unique', 'health_per_hero': 'HP_Per_Hero',
                    'escalation_threat_fixed': 'EscalationThreatFixed',
@@ -373,6 +374,10 @@ class Card(object):
     def is_alter_ego(self):
         """True if the card is an alter-ego."""
         return (self.value('type_code') == 'alter_ego')
+
+    def is_status(self):
+        """True if the card is a status."""
+        return (self.value('type_code') == 'status')
 
     def front_img_url(self):
         """Returns a URL to the card's front side image (None if not set)."""

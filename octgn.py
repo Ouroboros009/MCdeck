@@ -150,6 +150,7 @@ class OctgnCardSetData(object):
             _sch_typ_l = ('main_scheme', 'side_scheme')
             _enc_typ_l = ('attachment', 'environment', 'minion', 'obligation',
                           'treachery')
+            _sta_typ_l = ('status')
             _type = props.get('Type')
             if _type in _pla_typ_l or card.ctype == card.type_player:
                 pass
@@ -157,6 +158,8 @@ class OctgnCardSetData(object):
                 e.set('size', 'SchemeCard')
             elif _type in _enc_typ_l:
                 e.set('size', 'EncounterCard')
+            elif _type in _sta_typ_l:
+                e.set('size', 'StatusCard')
             elif _type == 'villain':
                 e.set('size', 'VillainCard')
             elif card.ctype == card.type_player:
@@ -387,7 +390,7 @@ class OctgnCardSetData(object):
         for card in deck._card_list_copy:
             img = LcgImage(card.front_img.scaled(img_size, mode=mode))
             # Handle aspect transformation
-            if card._octgn.properties.get('Type') in ['main_scheme', 'side_scheme']:
+            if card._octgn.properties.get('Type') in ['main_scheme', 'side_scheme', 'status']:
                 img = img.rotateClockwise()
             img_data = img.saveToBytes(format=img_format)
             _path_l = ['ImageDatabase', mc_game_id, 'Sets', deck._octgn.set_id,
@@ -401,7 +404,7 @@ class OctgnCardSetData(object):
             if card._octgn.alt_data:
                 img = LcgImage(card.specified_back_img.scaled(img_size, mode=mode))
                 # Handle aspect transformation
-                if card._octgn.alt_data.properties.get('Type') in ['main_scheme', 'side_scheme']:
+                if card._octgn.alt_data.properties.get('Type') in ['main_scheme', 'side_scheme', 'status']:
                     img = img.rotateClockwise()
                 img_data = img.saveToBytes(format=img_format)
                 _path_l = ['ImageDatabase', mc_game_id, 'Sets',
@@ -1223,7 +1226,7 @@ class OctgnProperties(object):
               'Type': (tuple, None,
                        ('ally', 'alter_ego', 'attachment', 'environment',
                         'event', 'hero', 'main_scheme', 'minion', 'obligation',
-                        'resource', 'side_scheme', 'support', 'treachery',
+                        'resource', 'side_scheme', 'status', 'support', 'treachery',
                         'upgrade', 'villain', None)),
               'CardNumber': (str, None, None),
               'Unique': (tuple, None, ('True', 'False')),
@@ -2562,7 +2565,7 @@ class OctgnDataDialogOtherTab(QtWidgets.QWidget):
         self._sch_boost_chk = QtWidgets.QCheckBox()
         self._sch_boost_chk.setFocusPolicy(QtCore.Qt.ClickFocus)
         _l.addWidget(self._sch_boost_chk, row, 0)
-        _l.addWidget(lbl('Hazard Icons:'), row, 1)
+        _l.addWidget(lbl('Boost Icons:'), row, 1)
         self._sch_boost_le = QtWidgets.QLineEdit()
         self._sch_boost_le.setValidator(_int_val)
         self._sch_boost_le.setToolTip('Scheme\'s number of hazard icons')
@@ -2683,6 +2686,10 @@ class OctgnDataDialogOtherTab(QtWidgets.QWidget):
                     _val = prop.get('EscalationThreatFixed')
                     _val = '' if _val is None else str(_val)
                     self._fixed_esc_threat_cb.setCurrentText(_val)
+                    # Accelaration icons
+                    _val = prop.get('Scheme_Acceleration')
+                    _val = '' if _val is None else str(_val)
+                    self._accel_le.setText(_val)
                     # Crisis icons
                     _val = prop.get('Scheme_Crisis')
                     _val = '' if _val is None else str(_val)
@@ -2691,7 +2698,7 @@ class OctgnDataDialogOtherTab(QtWidgets.QWidget):
                     _val = prop.get('Scheme_Hazard')
                     _val = '' if _val is None else str(_val)
                     self._hazard_le.setText(_val)
-                    # Hazard icons
+                    # Boost icons
                     _val = prop.get('Scheme_Boost')
                     _val = '' if _val is None else str(_val)
                     self._sch_boost_le.setText(_val)
