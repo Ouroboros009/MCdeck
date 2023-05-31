@@ -147,7 +147,7 @@ class OctgnCardSetData(object):
             # Resolve "size" parameter
             _pla_typ_l = ('ally', 'alter_ego', 'event', 'hero', 'resource',
                           'support', 'upgrade')
-            _sch_typ_l = ('main_scheme', 'side_scheme')
+            _sch_typ_l = ('main_scheme', 'side_scheme', 'player_side_scheme')
             _enc_typ_l = ('attachment', 'environment', 'minion', 'obligation',
                           'treachery')
             _sta_typ_l = ('status')
@@ -390,7 +390,7 @@ class OctgnCardSetData(object):
         for card in deck._card_list_copy:
             img = LcgImage(card.front_img.scaled(img_size, mode=mode))
             # Handle aspect transformation
-            if card._octgn.properties.get('Type') in ['main_scheme', 'side_scheme', 'status']:
+            if card._octgn.properties.get('Type') in ['main_scheme', 'side_scheme', 'player_side_scheme', 'status']:
                 img = img.rotateClockwise()
             img_data = img.saveToBytes(format=img_format)
             _path_l = ['ImageDatabase', mc_game_id, 'Sets', deck._octgn.set_id,
@@ -404,7 +404,7 @@ class OctgnCardSetData(object):
             if card._octgn.alt_data:
                 img = LcgImage(card.specified_back_img.scaled(img_size, mode=mode))
                 # Handle aspect transformation
-                if card._octgn.alt_data.properties.get('Type') in ['main_scheme', 'side_scheme', 'status']:
+                if card._octgn.alt_data.properties.get('Type') in ['main_scheme', 'side_scheme', 'player_side_scheme', 'status']:
                     img = img.rotateClockwise()
                 img_data = img.saveToBytes(format=img_format)
                 _path_l = ['ImageDatabase', mc_game_id, 'Sets',
@@ -1225,7 +1225,7 @@ class OctgnProperties(object):
               # Card generic properties
               'Type': (tuple, None,
                        ('ally', 'alter_ego', 'attachment', 'environment',
-                        'event', 'hero', 'main_scheme', 'minion', 'obligation',
+                        'event', 'hero', 'main_scheme', 'minion', 'obligation', 'player_side_scheme',
                         'resource', 'side_scheme', 'status', 'support', 'treachery',
                         'upgrade', 'villain', None)),
               'CardNumber': (str, None, None),
@@ -2982,7 +2982,7 @@ class OctgnDataDialogDeckExportTab(QtWidgets.QWidget):
                 _owner = data.properties.get('Owner')
 
                 if _type in ('hero', 'alter_ego', 'ally', 'event', 'resource',
-                             'support', 'upgrade'):
+                             'support', 'upgrade', 'player_side_scheme'):
                     o8d_type = 0  # Card (Player)
                 elif _type == 'obligation':
                     o8d_type = 3  # Nemesis (Player)
@@ -3675,7 +3675,7 @@ class OctgnCardImportDialog(QtWidgets.QDialog):
             _owner = card_data.properties.get('Owner')
             if _type is not None:
                 if _type in ('ally', 'alter_ego', 'event', 'resource',
-                             'support', 'upgrade'):
+                             'support', 'upgrade', 'player_side_scheme'):
                     c_type = MCCard.type_player
                 elif _type in  ('side_scheme', 'attachment', 'environment',
                                 'minion', 'obligation', 'treachery'):
@@ -3697,7 +3697,7 @@ class OctgnCardImportDialog(QtWidgets.QDialog):
                 # well as e.g. special cards. Also, all player cards are
                 # considered "Cards" rather than Pre-Made.
                 if _type in ('hero', 'alter_ego', 'ally', 'event', 'resource',
-                             'support', 'upgrade'):
+                             'support', 'upgrade', 'player_side_scheme'):
                     o8d_type = 0  # Card (Player)
                 elif _type == 'obligation':
                     o8d_type = 3  # Nemesis (Player)
@@ -4319,7 +4319,7 @@ def load_o8d_cards(o8d_file, data_path=None, parent=None):
         _owner = card_data.properties.get('Owner')
         if _type is not None:
             if _type in ('ally', 'alter_ego', 'event', 'resource',
-                         'support', 'upgrade'):
+                         'support', 'upgrade', 'player_side_scheme'):
                 c_type = MCCard.type_player
             elif _type in  ('side_scheme', 'attachment', 'environment',
                             'minion', 'obligation', 'treachery'):

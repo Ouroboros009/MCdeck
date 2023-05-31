@@ -354,7 +354,7 @@ class Card(object):
 
     def has_player_backside(self):
         """True if card is of a type that has player backside."""
-        _player_l = ('ally', 'event', 'upgrade', 'support', 'resource')
+        _player_l = ('ally', 'event', 'upgrade', 'support', 'resource', 'player_side_scheme')
         return self.value('type_code') in _player_l
 
     def has_encounter_backside(self):
